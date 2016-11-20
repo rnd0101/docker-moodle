@@ -3,8 +3,10 @@ MAINTAINER Sergio Gómez <sergio@quaip.com>
 
 # Keep upstart from complaining
 RUN dpkg-divert --local --rename --add /sbin/initctl \
-    && ln -sf /bin/true /sbin/initctl \
-    && echo 'Acquire::http { Proxy "http://172.17.0.1:3142"; };' >> /etc/apt/apt.conf.d/01proxy
+    && ln -sf /bin/true /sbin/initctl
+    
+# for Ubuntu host with running apt proxy:    \
+#    && echo 'Acquire::http { Proxy "http://172.17.0.1:3142"; };' >> /etc/apt/apt.conf.d/01proxy
 
 # Let the container know that there is no tty
 ENV DEBIAN_FRONTEND noninteractive
@@ -22,8 +24,9 @@ ADD ./start.sh /start.sh
 ADD ./foreground.sh /etc/apache2/foreground.sh
 ADD ./supervisord.conf /etc/supervisord.conf
 
-COPY moodle-latest.tgz /var/www/moodle-latest.tgz
-# ADD https://download.moodle.org/moodle/moodle-latest.tgz /var/www/moodle-latest.tgz
+# optimization: d/l once instead of ADD each time
+#COPY moodle-latest.tgz /var/www/moodle-latest.tgz
+ADD https://download.moodle.org/moodle/moodle-latest.tgz /var/www/moodle-latest.tgz
 RUN cd /var/www; tar zxvf moodle-latest.tgz; mv /var/www/moodle /var/www/html \
     && chown -R www-data:www-data /var/www/html/moodle \
     && mkdir /var/moodledata \
